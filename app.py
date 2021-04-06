@@ -1,8 +1,6 @@
 import io
 import base64
 from flask import Flask,render_template,request,url_for,redirect,Response
-# from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-# from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
 from queue import PriorityQueue
@@ -21,7 +19,34 @@ graph = None
 pos = None
 fig, ax = plt.subplots(figsize=(6, 4))
 all_edges = None
+spt_edges = None
 
+inf = sys.maxsize
+
+
+def bellmanFord(G, source, pos):
+    V = len(G.nodes())
+    dist = []
+    parent = [None] * V  # parent[i] will hold the node from which i is reached to, in the shortest path from source
+
+    for i in range(V):
+        dist.append(inf)
+
+    parent[source] = -1;  # source is itself the root, and hence has no parent
+    dist[source] = 0;
+    for i in range(V - 1):
+        for u, v, d in G.edges(data=True):  # Relaxation
+            if dist[u] + d['weight'] < dist[v]:  # Relaxation Equation
+                dist[v] = d['weight'] + dist[u]
+                parent[v] = u
+
+    # marking the shortest path from source to each of the vertex with red, using parent[]
+    for X in range(V):
+        if parent[X] != -1:  # ignore the parent of root node
+            if (parent[X], X) in G.edges():
+                print(spt_edges)
+                spt_edges.add(tuple([parent[X], X, G[parent[X]][X]['weight']]))
+                yield spt_edges
 
 def random_node(NUM_NODES):
     return randint(1, NUM_NODES)
@@ -42,7 +67,6 @@ def prims(NUM_NODES):
 
     # Loop until all nodes are in the MST
     while len(nodes_on_mst) < NUM_NODES:
-        # Get the edge with smallest weight from the priority queue
         _, edge = pqueue.get(pqueue)
         print(_, edge)
 
@@ -94,6 +118,52 @@ def update(mst_edges):
         graph, pos, edgelist=mst_edges, alpha=1.0,
         edge_color='red', width=1, ax=ax
     )
+def minDistance(dist, sptSet, V):
+    min = sys.maxsize  # assigning largest numeric value to min
+    for v in range(V):
+        if sptSet[v] == False and dist[v] <= min:
+            min = dist[v]
+            min_index = v
+    return min_index
+
+
+# function that performs dijsktras algorithm
+def dijsktras(G, source, pos):
+    V = len(G.nodes())
+    dist = []
+    parent = [None] * V  # parent[i] will hold the node from which i is reached to, in the shortest path from source
+    sptSet = []  # sptSet[i] will hold true if vertex i is included in shortest path tree
+
+    for i in range(V):
+        dist.append(sys.maxsize)
+        sptSet.append(False)
+    dist[source] = 0
+    parent[source] = -1  # source is itself the root, and hence has no parent
+    for count in range(V - 1):
+        u = minDistance(dist, sptSet, V)  # pick the minimum distance vertex from the set of vertices
+        sptSet[u] = True
+        # update the vertices adjacent to the picked vertex
+        for v in range(V):
+            if (u, v) in G.edges():
+                if sptSet[v] == False and dist[u] != sys.maxsize and dist[u] + G[u][v]['weight'] < dist[v]:
+                    dist[v] = dist[u] + G[u][v]['weight']
+                    parent[v] = u
+                    #print(u,v,"SRC and DEST")
+    # marking the shortest path from source to each of the vertex with red, using parent[]
+    for X in range(V):
+        if parent[X] != -1:  # ignore the parent of root node
+            if (parent[X], X) in G.edges():
+                print(spt_edges)
+                spt_edges.add(tuple([parent[X],X,G[parent[X]][X]['weight']]))
+
+                #nx.draw_networkx_edges(G, pos, edgelist=[(parent[X], X)], width=2.5, alpha=1, edge_color='red')
+                #yield spt_edges
+    final = set()
+
+    for e in spt_edges:
+        final.add(e)
+        print(final, "Final!!")
+        yield final
 
 def do_nothing():
     # FuncAnimation requires an initialization function. We don't
@@ -123,7 +193,7 @@ def Prims():
 
         graph = nx.Graph()
         define_graph(graph,NUM_NODES, message)
-        print(list(graph.nodes))
+        #print(list(graph.nodes))
         pos = nx.spring_layout(graph)
 
         all_edges = set(
@@ -140,29 +210,71 @@ def Prims():
             )
         FFwriter = animation.FFMpegWriter(fps=1)
         ani.save('static/animation.mp4', writer=FFwriter)
-        return redirect(url_for('plot'))
+        return render_template('plot.html',name="Prim's")
     else:
         return render_template('Prims.html')
 
 @app.route('/BellManFord',methods=['GET','POST'])
 def BellManFord():
+    global pos,fig,ax,graph,all_edges,spt_edges
     if request.method =="POST":
-        no_of_edges=request.form["edges"]
         message=request.form["message"]
-        print(no_of_edges)
         print(message)
-        return '<h1>success</h1>'
+        NUM_NODES = int(request.form["nodes"])
+        graph = nx.DiGraph()
+
+        define_graph(graph, NUM_NODES, message)
+        pos = nx.spring_layout(graph)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        labels = nx.get_edge_attributes(graph, 'weight')
+        all_edges = set(
+            tuple((n1, n2)) for n1, n2 in graph.edges()
+        )
+        spt_edges= set()
+        source = int(request.form["source"])
+        ani = animation.FuncAnimation(
+            fig,
+            update,
+            init_func=do_nothing,
+            frames=bellmanFord(graph, source, pos),
+            interval=1000,
+            repeat=False
+        )
+        FFwriter = animation.FFMpegWriter(fps=1)
+        ani.save('static/animation.mp4', writer=FFwriter)
+        return render_template('plot.html', name="BellmanFord")
     else:
-        return render_template('BellMannFord.html')
+        return render_template('BellManFord.html')
 
 @app.route('/Dijkstra',methods=['GET','POST'])
 def Dijkstra():
+    global pos,fig,ax,graph,all_edges,spt_edges
     if request.method =="POST":
-        no_of_edges=request.form["edges"]
         message=request.form["message"]
-        print(no_of_edges)
         print(message)
-        return '<h1>success</h1>'
+        NUM_NODES = int(request.form["nodes"])
+        graph = nx.Graph()
+
+        define_graph(graph, NUM_NODES,message)
+        pos = nx.spring_layout(graph)
+        fig, ax = plt.subplots(figsize=(6, 4))
+        labels = nx.get_edge_attributes(graph, 'weight')
+        all_edges = set(
+            tuple((n1, n2)) for n1, n2 in graph.edges()
+        )
+        spt_edges = set()
+        source = int(request.form["source"])
+        ani = animation.FuncAnimation(
+            fig,
+            update,
+            init_func=do_nothing,
+            frames=dijsktras(graph,source,pos),
+            interval=1000,
+            repeat=False
+        )
+        FFwriter = animation.FFMpegWriter(fps=1)
+        ani.save('static/animation.mp4', writer=FFwriter)
+        return render_template('plot.html', name="Dijkstra's")
     else:
         return render_template('dijkstra.html')
 
@@ -171,5 +283,4 @@ def plot():
     return render_template('plot.html')
 
 if __name__=="__main__":
-
     app.run(debug=True)

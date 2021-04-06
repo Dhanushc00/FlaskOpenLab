@@ -12,10 +12,11 @@
        Dijkstra
     </h1>
     <form action="/Dijkstra" method="POST">
-        <p>No of edges: <input type="text" name="edges" placeholder="enter no of edges" /></p>
-        <p>Enter edges: <textarea name="message" rows="10" cols="100" placeholder="sourcenode->node1,node2,node3...."></textarea>
+        <p>No of edges: <input type="text" name="nodes" placeholder="Enter no of nodes" /></p>
+        <p>Enter edges: <textarea name="message" rows="10" cols="100" placeholder="Enter in this format - node1:node2:edge_weight, node3:node4:edge_weight"></textarea>
         </p>
-        <p><input type='submit' value="submit"/></p>    
+        <p>Source Node: <input type="text" name="source" placeholder="Enter source node" /></p>
+        <p><input type='submit' value="submit"/></p>
     </form>
 </div>
 {% endblock %}
