@@ -17,8 +17,8 @@ rc('animation', html='html5')
 mpl.rcParams['animation.ffmpeg_path'] = r'G:\\ffmpeg\\bin\\ffmpeg.exe'
 
 app = Flask(__name__)
-graph = nx.Graph()
-pos = nx.spring_layout(graph)
+graph = None
+pos = None
 fig, ax = plt.subplots(figsize=(6, 4))
 all_edges = None
 
@@ -99,7 +99,7 @@ def do_nothing():
     # FuncAnimation requires an initialization function. We don't
     # do any initialization, so we provide a no-op function.
     pass
-    
+
 @app.route('/',methods=["GET","POST"])
 def hello_world():
     if request.method =="POST":
@@ -121,7 +121,7 @@ def Prims():
         print(message)
         NUM_NODES = int(request.form["nodes"])
 
-
+        graph = nx.Graph()
         define_graph(graph,NUM_NODES, message)
         print(list(graph.nodes))
         pos = nx.spring_layout(graph)

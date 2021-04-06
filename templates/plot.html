@@ -7,8 +7,11 @@
 {% endblock %}
 
 {% block body %}
-<video width="320" height="240" autoplay controls>
+<video width="320" height="240" autoplay controls id="myVideo">
   <source src="{{ url_for('static', filename='animation.mp4') }}" type="video/mp4">
 Your browser does not support the video tag.
 </video>
+<div class="vid_content">
+  <h1>Prim's Algorithm</h1>
+</div>
 {% endblock %}
