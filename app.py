@@ -20,11 +20,15 @@ pos = None
 fig, ax = plt.subplots(figsize=(6, 4))
 all_edges = None
 spt_edges = None
+name=None
+weight=0
 
 inf = sys.maxsize
 
 
 def bellmanFord(G, source, pos):
+    global weight
+    weight=0
     V = len(G.nodes())
     dist = []
     parent = [None] * V  # parent[i] will hold the node from which i is reached to, in the shortest path from source
@@ -46,7 +50,15 @@ def bellmanFord(G, source, pos):
             if (parent[X], X) in G.edges():
                 print(spt_edges)
                 spt_edges.add(tuple([parent[X], X, G[parent[X]][X]['weight']]))
-                yield spt_edges
+                #yield spt_edges
+                weight+=G[parent[X]][X]['weight']
+    final = set()
+
+    for e in spt_edges:
+        final.add(e)
+        print(final, "Final!!")
+        yield final
+
 
 def random_node(NUM_NODES):
     return randint(1, NUM_NODES)
@@ -101,7 +113,6 @@ def define_graph(graph, NUM_NODES,message):
 def update(mst_edges):
     #print("Updated",mst_edges)
     global pos,fig,ax,graph,all_edges
-    print(pos)
     ax.clear()
     labels = nx.get_edge_attributes(graph,'weight')
     nodes ={}
@@ -129,6 +140,8 @@ def minDistance(dist, sptSet, V):
 
 # function that performs dijsktras algorithm
 def dijsktras(G, source, pos):
+    global weight
+    weight=0
     V = len(G.nodes())
     dist = []
     parent = [None] * V  # parent[i] will hold the node from which i is reached to, in the shortest path from source
@@ -153,16 +166,16 @@ def dijsktras(G, source, pos):
     for X in range(V):
         if parent[X] != -1:  # ignore the parent of root node
             if (parent[X], X) in G.edges():
-                print(spt_edges)
+                #print(spt_edges)
                 spt_edges.add(tuple([parent[X],X,G[parent[X]][X]['weight']]))
-
+                weight+=G[parent[X]][X]['weight']
                 #nx.draw_networkx_edges(G, pos, edgelist=[(parent[X], X)], width=2.5, alpha=1, edge_color='red')
                 #yield spt_edges
     final = set()
 
     for e in spt_edges:
         final.add(e)
-        print(final, "Final!!")
+        #print(final, "Final!!")
         yield final
 
 def do_nothing():
@@ -185,7 +198,7 @@ def hello_world():
 
 @app.route('/Prims',methods=['GET','POST'])
 def Prims():
-    global pos,fig,ax,graph,all_edges
+    global pos,fig,ax,graph,all_edges,name
     if request.method =="POST":
         message=request.form["message"]
         print(message)
@@ -210,13 +223,15 @@ def Prims():
             )
         FFwriter = animation.FFMpegWriter(fps=1)
         ani.save('static/animation.mp4', writer=FFwriter)
-        return render_template('plot.html',name="Prim's")
+        name="Prim's"
+        return redirect(url_for('plot'))
+        #return render_template('plot.html',name="Prim's")
     else:
         return render_template('Prims.html')
 
 @app.route('/BellManFord',methods=['GET','POST'])
 def BellManFord():
-    global pos,fig,ax,graph,all_edges,spt_edges
+    global pos,fig,ax,graph,all_edges,spt_edges,name
     if request.method =="POST":
         message=request.form["message"]
         print(message)
@@ -242,13 +257,16 @@ def BellManFord():
         )
         FFwriter = animation.FFMpegWriter(fps=1)
         ani.save('static/animation.mp4', writer=FFwriter)
-        return render_template('plot.html', name="BellmanFord")
+        print("Video Created!")
+        name='BellmanFord'
+        return redirect(url_for('plot'))
+        #return render_template('plot.html', name="BellmanFord")
     else:
         return render_template('BellManFord.html')
 
 @app.route('/Dijkstra',methods=['GET','POST'])
 def Dijkstra():
-    global pos,fig,ax,graph,all_edges,spt_edges
+    global pos,fig,ax,graph,all_edges,spt_edges,name
     if request.method =="POST":
         message=request.form["message"]
         print(message)
@@ -274,13 +292,18 @@ def Dijkstra():
         )
         FFwriter = animation.FFMpegWriter(fps=1)
         ani.save('static/animation.mp4', writer=FFwriter)
-        return render_template('plot.html', name="Dijkstra's")
+        print("Video Created!")
+        name="Dijkstra's"
+        return redirect(url_for('plot'))
     else:
         return render_template('dijkstra.html')
 
 @app.route('/plot',methods=['GET','POST'])
 def plot():
-    return render_template('plot.html')
+    if(name=="Prim's"):
+        return render_template('plot.html', name=name)
+    else:
+        return render_template('plot.html', name=name, weight=weight)
 
 if __name__=="__main__":
     app.run(debug=True)
