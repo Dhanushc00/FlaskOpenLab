@@ -65,7 +65,7 @@ def random_node(NUM_NODES):
 
 def prims(NUM_NODES):
     pqueue = PriorityQueue()
-    global graph
+    global graph,weight
     print(list(graph.nodes))
     print(list(graph.edges))
     edges_in_mst = set()
@@ -103,6 +103,12 @@ def prims(NUM_NODES):
 
         # Yield edges in the MST to plot.
         yield edges_in_mst
+    weight = 0
+    for e in edges_in_mst:
+        x = list(e)
+        edge_data = graph.get_edge_data(x[0],x[1])
+        edge_weight = edge_data["weight"]
+        weight+=edge_weight
 
 def define_graph(graph, NUM_NODES,message):
     edges = message.split(',')
@@ -301,9 +307,9 @@ def Dijkstra():
 @app.route('/plot',methods=['GET','POST'])
 def plot():
     if(name=="Prim's"):
-        return render_template('plot.html', name=name)
-    else:
         return render_template('plot.html', name=name, weight=weight)
+    else:
+        return render_template('plot.html', name=name)
 
 if __name__=="__main__":
     app.run(debug=True)
