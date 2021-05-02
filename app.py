@@ -22,6 +22,7 @@ all_edges = None
 spt_edges = None
 name=None
 weight=0
+dijkstra_map = {}
 
 inf = sys.maxsize
 
@@ -53,7 +54,7 @@ def bellmanFord(G, source, pos):
                 #yield spt_edges
                 weight+=G[parent[X]][X]['weight']
     final = set()
-
+    print(dist,"distance")
     for e in spt_edges:
         final.add(e)
         print(final, "Final!!")
@@ -136,11 +137,13 @@ def update(mst_edges):
         edge_color='red', width=1, ax=ax
     )
 def minDistance(dist, sptSet, V):
+    global dijkstra_map
     min = sys.maxsize  # assigning largest numeric value to min
     for v in range(V):
         if sptSet[v] == False and dist[v] <= min:
             min = dist[v]
             min_index = v
+    dijkstra_map[min_index] = min
     return min_index
 
 
@@ -158,7 +161,7 @@ def dijsktras(G, source, pos):
         sptSet.append(False)
     dist[source] = 0
     parent[source] = -1  # source is itself the root, and hence has no parent
-    for count in range(V - 1):
+    for count in range(V):
         u = minDistance(dist, sptSet, V)  # pick the minimum distance vertex from the set of vertices
         sptSet[u] = True
         # update the vertices adjacent to the picked vertex
@@ -237,7 +240,7 @@ def Prims():
 
 @app.route('/BellManFord',methods=['GET','POST'])
 def BellManFord():
-    global pos,fig,ax,graph,all_edges,spt_edges,name
+    global pos,fig,ax,graph,all_edges,spt_edges,name,
     if request.method =="POST":
         message=request.form["message"]
         print(message)
@@ -272,7 +275,7 @@ def BellManFord():
 
 @app.route('/Dijkstra',methods=['GET','POST'])
 def Dijkstra():
-    global pos,fig,ax,graph,all_edges,spt_edges,name
+    global pos,fig,ax,graph,all_edges,spt_edges,name,dijkstra_map
     if request.method =="POST":
         message=request.form["message"]
         print(message)
@@ -299,6 +302,8 @@ def Dijkstra():
         FFwriter = animation.FFMpegWriter(fps=1)
         ani.save('static/animation.mp4', writer=FFwriter)
         print("Video Created!")
+        print(dijkstra_map,"distance")
+        dijkstra_map = {} #Clear the dictionary
         name="Dijkstra's"
         return redirect(url_for('plot'))
     else:
