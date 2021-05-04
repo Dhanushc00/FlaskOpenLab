@@ -1,20 +1,24 @@
 import io
 import base64
-from flask import Flask,render_template,request,url_for,redirect,Response
+from flask import Flask,render_template,request,url_for,redirect,Response,session,make_response
+import requests
+from bs4 import BeautifulSoup
 import matplotlib.pyplot as plt
 import numpy as np
 from queue import PriorityQueue
 from random import randint, uniform
 import sys
-
+import datetime
 import networkx as nx
 import matplotlib as mpl
 from matplotlib import animation,rc
 
 rc('animation', html='html5')
-mpl.rcParams['animation.ffmpeg_path'] = r'G:\\ffmpeg\\bin\\ffmpeg.exe'
+mpl.rcParams['animation.ffmpeg_path'] = r'C:\\ffmpeg\\bin\\ffmpeg.exe'
 
 app = Flask(__name__)
+app.permanent_session_lifetime = datetime.timedelta(days=365)
+app.secret_key = '12345'
 graph = None
 pos = None
 fig, ax = plt.subplots(figsize=(6, 4))
@@ -212,7 +216,6 @@ def Prims():
         message=request.form["message"]
         print(message)
         NUM_NODES = int(request.form["nodes"])
-
         graph = nx.Graph()
         define_graph(graph,NUM_NODES, message)
         #print(list(graph.nodes))
@@ -233,14 +236,20 @@ def Prims():
         FFwriter = animation.FFMpegWriter(fps=1)
         ani.save('static/animation.mp4', writer=FFwriter)
         name="Prim's"
-        return redirect(url_for('plot'))
+        res = make_response(render_template('plot.html',name="Prim's", weight=weight))
+        res.set_cookie('NUM_NODES', str(NUM_NODES), domain='127.0.0.1')
+        res.set_cookie('message', str(message), domain='127.0.0.1')
+        return res
+        #return redirect(url_for('plot'))
         #return render_template('plot.html',name="Prim's")
     else:
-        return render_template('Prims.html')
+        message=request.cookies.get('message')
+        NUM_NODES=request.cookies.get('NUM_NODES')
+        return render_template('Prims.html',val=[message,NUM_NODES])
 
 @app.route('/BellManFord',methods=['GET','POST'])
 def BellManFord():
-    global pos,fig,ax,graph,all_edges,spt_edges,name,
+    global pos,fig,ax,graph,all_edges,spt_edges,name
     if request.method =="POST":
         message=request.form["message"]
         print(message)
@@ -271,15 +280,31 @@ def BellManFord():
         return redirect(url_for('plot'))
         #return render_template('plot.html', name="BellmanFord")
     else:
-        return render_template('BellManFord.html')
+        url="https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm"
+        r = requests.get(url)
+        soup = BeautifulSoup(r.content) 
+        table = soup.find('pre') 
+        print(table)
+        return render_template('BellManFord.html',table=str(table))
 
 @app.route('/Dijkstra',methods=['GET','POST'])
 def Dijkstra():
     global pos,fig,ax,graph,all_edges,spt_edges,name,dijkstra_map
     if request.method =="POST":
         message=request.form["message"]
+        nodes=request.form["nodes"]
+        source=request.form["source"]
+        session["Dijkstra"]={"message":message,"nodes":nodes,"source":source}
+        # if "save" in request.form: 
+        #     #print("Inside session",session["Dijkstra"])
+        #     pass
+        # else:
+        #     print("Not an yes")
+        #if save=="yes":
+
+        #if(message.save)
         print(message)
-        NUM_NODES = int(request.form["nodes"])
+        NUM_NODES = int(nodes)
         graph = nx.Graph()
 
         define_graph(graph, NUM_NODES,message)
@@ -290,7 +315,7 @@ def Dijkstra():
             tuple((n1, n2)) for n1, n2 in graph.edges()
         )
         spt_edges = set()
-        source = int(request.form["source"])
+        source = int(source)
         ani = animation.FuncAnimation(
             fig,
             update,
@@ -307,7 +332,14 @@ def Dijkstra():
         name="Dijkstra's"
         return redirect(url_for('plot'))
     else:
-        return render_template('dijkstra.html')
+        val=""
+        if "Dijkstra" in session:
+            message=session["Dijkstra"]["message"]
+            nodes=session["Dijkstra"]["nodes"]
+            source=session["Dijkstra"]["source"]
+            val=[message,nodes,source]
+            print("9y3i7rgfd",nodes,source)
+        return render_template('dijkstra.html',val=val)
 
 @app.route('/plot',methods=['GET','POST'])
 def plot():
