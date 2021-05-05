@@ -12,9 +12,10 @@ import datetime
 import networkx as nx
 import matplotlib as mpl
 from matplotlib import animation,rc
+import re
 
 rc('animation', html='html5')
-mpl.rcParams['animation.ffmpeg_path'] = r'C:\\ffmpeg\\bin\\ffmpeg.exe'
+mpl.rcParams['animation.ffmpeg_path'] = r'G:\\ffmpeg\\bin\\ffmpeg.exe'
 
 app = Flask(__name__)
 app.permanent_session_lifetime = datetime.timedelta(days=365)
@@ -26,13 +27,14 @@ all_edges = None
 spt_edges = None
 name=None
 weight=0
+bellman=None
 dijkstra_map = {}
 
 inf = sys.maxsize
 
 
 def bellmanFord(G, source, pos):
-    global weight
+    global weight,bellman
     weight=0
     V = len(G.nodes())
     dist = []
@@ -58,7 +60,7 @@ def bellmanFord(G, source, pos):
                 #yield spt_edges
                 weight+=G[parent[X]][X]['weight']
     final = set()
-    print(dist,"distance")
+    bellman = dist
     for e in spt_edges:
         final.add(e)
         print(final, "Final!!")
@@ -245,7 +247,11 @@ def Prims():
     else:
         message=request.cookies.get('message')
         NUM_NODES=request.cookies.get('NUM_NODES')
-        return render_template('Prims.html',val=[message,NUM_NODES])
+        url="https://www.geeksforgeeks.org/prims-algorithm-using-priority_queue-stl/"
+        r = requests.get(url)
+        soup = BeautifulSoup(r.content)
+        table = soup.find_all('pre',text = re.compile('(Initialize keys of all)+'))
+        return render_template('Prims.html',val=[message,NUM_NODES], table=str(table[0]))
 
 @app.route('/BellManFord',methods=['GET','POST'])
 def BellManFord():
@@ -282,8 +288,8 @@ def BellManFord():
     else:
         url="https://en.wikipedia.org/wiki/Bellman%E2%80%93Ford_algorithm"
         r = requests.get(url)
-        soup = BeautifulSoup(r.content) 
-        table = soup.find('pre') 
+        soup = BeautifulSoup(r.content)
+        table = soup.find('pre')
         print(table)
         return render_template('BellManFord.html',table=str(table))
 
@@ -291,11 +297,12 @@ def BellManFord():
 def Dijkstra():
     global pos,fig,ax,graph,all_edges,spt_edges,name,dijkstra_map
     if request.method =="POST":
+        dijkstra_map = {} #Clear the dictionary
         message=request.form["message"]
         nodes=request.form["nodes"]
         source=request.form["source"]
         session["Dijkstra"]={"message":message,"nodes":nodes,"source":source}
-        # if "save" in request.form: 
+        # if "save" in request.form:
         #     #print("Inside session",session["Dijkstra"])
         #     pass
         # else:
@@ -328,7 +335,7 @@ def Dijkstra():
         ani.save('static/animation.mp4', writer=FFwriter)
         print("Video Created!")
         print(dijkstra_map,"distance")
-        dijkstra_map = {} #Clear the dictionary
+
         name="Dijkstra's"
         return redirect(url_for('plot'))
     else:
@@ -339,12 +346,22 @@ def Dijkstra():
             source=session["Dijkstra"]["source"]
             val=[message,nodes,source]
             print("9y3i7rgfd",nodes,source)
-        return render_template('dijkstra.html',val=val)
+        url="https://www.javatpoint.com/dijkstras-algorithm"
+        r = requests.get(url)
+        soup = BeautifulSoup(r.content)
+        table = soup.find_all('pre')
+        print(table[0])
+        return render_template('dijkstra.html',val=val, table=str(table[0]))
 
 @app.route('/plot',methods=['GET','POST'])
 def plot():
+    print(name)
     if(name=="Prim's"):
         return render_template('plot.html', name=name, weight=weight)
+    if(name=="Dijkstra's"):
+        return render_template('plot.html', name=name, dijkstra_map=dijkstra_map)
+    if(name=="BellmanFord"):
+        return render_template('plot.html', name=name, bellman=bellman)
     else:
         return render_template('plot.html', name=name)
 

@@ -12,15 +12,23 @@
     <h1>
        Dijkstra
     </h1>
+    <p> Single Source shortest path algorithm like Dijkstra's algorithm is used in routing. Here the nodes are the routers and the edge weights are the link costs.</p>
     <form action="/Dijkstra" method="POST" class="algo_form">
-        <p>No of edges: <input required type="text" id="edges" name="nodes" placeholder="Enter no of nodes" /></p>
+        <p>No of nodes: <input required type="text" id="edges" name="nodes" placeholder="Enter no of nodes" /></p>
         <p>Enter edges: <textarea required name="message" rows="10" id="message" cols="100" placeholder="Enter in this format - node1:node2:edge_weight,node3:node4:edge_weight"></textarea>
         </p>
         <p>Source Node: <input required type="text" name="source" placeholder="Enter source node" id="source" /></p>
         <!-- <p id="unchk">Save Inputs : <input type ="radio" name ="save" id="save" checked="checked" data-waschecked="true"></p> -->
         <p><input type='submit' value="submit" class="zoom" /></p>
     </form>
-        <button type='submit' name="Update" class="zoom" value="update">Rehydrate previous data using session</button>
+        <p><button type='submit' name="Update" class="zoom" value="update">Rehydrate previous data using session</button></p>
+        <div id="scrap"><p>Algorithm scrapped from
+            <a href="https://www.javatpoint.com/dijkstras-algorithm" style="color: chartreuse;">javatpiont</a></p></div>
+        {{ table|safe }}
+        <script>
+            var dt='{{ table }}'
+            console.log(dt)
+        </script>
     <!-- <script>
         var data='{{ val[2] }}'
         console.log("Session data",data)

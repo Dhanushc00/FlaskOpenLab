@@ -12,6 +12,7 @@
     <h1>
         Prims
     </h1>
+    <p> Minimum Spanning tree algorithm like Prim's algorithm can be used to find the most efficient way to link networks. Here the nodes are the Networks and the edge weights are the cost of the cable.</p>
     <form action="/Prims" method="POST" class="algo_form">
         <p>No of Nodes: <input type="text" name="nodes" id="nodes" placeholder="Enter No of Nodes" /></p>
         <p>Enter edges: <textarea name="message" rows="10" cols="100" id="message" placeholder="Enter in this format - node1:node2:edge_weight,node3:node4:edge_weight"></textarea>
@@ -19,6 +20,13 @@
         <p><input type='submit' value="submit" class="zoom"/></p>
     </form>
     <button type='submit' name="Update" class="zoom" value="update">Rehydrate previous data using cookies</button>
+    <div id="scrap"><p>Algorithm scrapped from
+        <a href="https://www.geeksforgeeks.org/prims-algorithm-using-priority_queue-stl/" style="color: chartreuse;">geeksforgeeks</a></p></div>
+    {{ table|safe }}
+    <script>
+        var dt='{{ table }}'
+        console.log(dt)
+    </script>
     <script>
        $(function(){
     $('button[name="Update"]').click(function(){

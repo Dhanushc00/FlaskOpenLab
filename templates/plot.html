@@ -16,5 +16,27 @@ Your browser does not support the video tag.
   {% if weight %}
   <p>Sum of weights of edges in MST = {{ weight}} </p>
   {% endif %}
+  {% if dijkstra_map %}
+      <table>
+          <tr><td>Node</td><td>Distance</td></tr>
+          {%for key in dijkstra_map%}
+            <tr>
+                <td>{{ key }}</td>
+                <td>{{ dijkstra_map[key] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+ {% endif %}
+ {% if bellman %}
+     <table>
+         <tr><td>Node</td><td>Distance</td></tr>
+         {%for i in range(bellman | length) %}
+           <tr>
+               <td>{{ i }}</td>
+               <td>{{ bellman[i] }}</td>
+           </tr>
+       {% endfor %}
+   </table>
+{% endif %}
 </div>
 {% endblock %}
